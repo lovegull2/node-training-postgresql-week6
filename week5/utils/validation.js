@@ -13,7 +13,7 @@ const isNotValidUuid = (value) => {
 }
 
 const isNotValidUserName = (value) => {
-    const userNamePattern = /^[a-zA-Z0-9]{2,10}$/
+    const userNamePattern = /^[\u4e00-\u9fa5a-zA-Z0-9]{2,10}$/
     return !userNamePattern.test(value)
 }
 

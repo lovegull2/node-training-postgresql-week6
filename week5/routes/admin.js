@@ -1,6 +1,6 @@
 const express = require('express')
-
 const router = express.Router()
+const config = require('../config/index')
 const { dataSource } = require('../db/data-source')
 const logger = require('../utils/logger')('Admin')
 const { dbEntityNameUser, userRole } = require('../entities/User')
@@ -9,9 +9,15 @@ const { dbEntityNameCourse } = require('../entities/Course')
 const { dbEntityNameSkill } = require('../entities/Skill')
 const responseSend = require('../utils/serverResponse')
 const { isNotValidUuid, isNotValidString, isNotValidInteger, isNotValidUrl } = require('../utils/validation')
+const auth = require('../middlewares/auth')({
+    secret: config.get('secret').jwtSecret,
+    userRepository: dataSource.getRepository(dbEntityNameUser),
+    logger
+})
+const isCoach = require('../middlewares/isCoach')
 
 /** 新增教練課程資料 */
-router.post('/coaches/courses', async (req, res, next) => {
+router.post('/coaches/courses', auth, isCoach, async (req, res, next) => {
     try {
         const {
             user_id: userId, skill_id: skillId, name, description, start_at: startAt, end_at: endAt,
@@ -62,7 +68,7 @@ router.post('/coaches/courses', async (req, res, next) => {
         })
         const savedCourse = await courseRepo.save(newCourse)
         const course = await courseRepo.findOne({ where: { id: savedCourse.id } })
-        responseSend(res, 201, { course } )
+        responseSend(res, 201, { course })
     } catch (error) {
         logger.error(error)
         next(error)
@@ -70,7 +76,7 @@ router.post('/coaches/courses', async (req, res, next) => {
 })
 
 /** 編輯教練課程資料 */
-router.put('/coaches/courses/:courseId', async (req, res, next) => {
+router.put('/coaches/courses/:courseId', auth, isCoach, async (req, res, next) => {
     try {
         const { courseId } = req.params
         const { skill_id: skillId, name, description, start_at: startAt, end_at: endAt,

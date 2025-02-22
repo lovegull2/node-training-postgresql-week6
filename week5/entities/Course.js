@@ -5,7 +5,7 @@ module.exports = {
     /** 資料庫 - 教練課程 */
     dbEntityNameCourse: dbEntityName,
     Course: new EntitySchema({
-        name: dbEntityName,
+        name: 'Course',
         tableName: 'COURSE',
         columns: {
             id: {
@@ -15,23 +15,11 @@ module.exports = {
             },
             user_id: {
                 type: 'uuid',
-                nullable: false,
-                foreignKey: {
-                    name: 'course_user_id_fkey',
-                    columnNames: ['user_id'],
-                    referencedTableName: 'USER',
-                    referencedColumnNames: ['id']
-                }
+                nullable: false
             },
             skill_id: {
                 type: 'uuid',
-                nullable: false,
-                foreignKey: {
-                    name: 'course_skill_id_fkey',
-                    columnNames: ['skill_id'],
-                    referencedTableName: 'SKILL',
-                    referencedColumnNames: ['id']
-                }
+                nullable: false
             },
             name: {
                 type: 'varchar',
@@ -68,6 +56,26 @@ module.exports = {
                 type: 'timestamp',
                 updateDate: true,
                 nullable: false
+            }
+        },
+        relations: {
+            User: {
+                target: 'User',
+                type: 'many-to-one',
+                joinColumn: {
+                    name: 'user_id',
+                    referencedColumnName: 'id',
+                    foreignKeyConstraintName: 'courses_user_id_fk'
+                }
+            },
+            Skill: {
+                target: 'Skill',
+                type: 'many-to-one',
+                joinColumn: {
+                    name: 'skill_id',
+                    referencedColumnName: 'id',
+                    foreignKeyConstraintName: 'courses_skill_id_fk'
+                }
             }
         }
     })

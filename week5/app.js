@@ -6,9 +6,10 @@ const pinoHttp = require('pino-http')
 const logger = require('./utils/logger')('App')
 const creditPackageRouter = require('./routes/creditPackage')
 const skillRouter = require('./routes/skill')
-const usersRouter = require('./routes/users')
+const userRouter = require('./routes/user')
 const adminRouter = require('./routes/admin')
 const coachRouter = require('./routes/coaches')
+const courseRouter = require('./routes/courses')
 
 const app = express()
 app.use(cors())
@@ -31,16 +32,17 @@ app.get('/healthcheck', (req, res) => {
 })
 app.use('/api/credit-package', creditPackageRouter)
 app.use('/api/coaches/skill', skillRouter)
-app.use('/api/users', usersRouter)
+app.use('/api/users', userRouter)
 app.use('/api/admin', adminRouter)
 app.use('/api/coaches', coachRouter)
+app.use('/api/courses', courseRouter)
 
 // eslint-disable-next-line no-unused-vars
 app.use((err, req, res, next) => {
   req.log.error(err)
   res.status(500).json({
     status: 'error',
-    message: '伺服器錯誤'
+    message: '伺服器錯誤:' + err.message
   })
 })
 

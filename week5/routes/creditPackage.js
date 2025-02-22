@@ -1,10 +1,18 @@
 const express = require('express')
 const { dataSource } = require('../db/data-source')
 const { dbEntityNameCreditPackage } = require('../entities/CreditPackages')
+const { dbEntityNameCreditPurchase } = require('../entities/CreditPurchase')
+const { dbEntityNameUser } = require('../entities/User')
 const logger = require('../utils/logger')(dbEntityNameCreditPackage)
 const responseSend = require('../utils/serverResponse')
 const { isNotValidString, isNotValidInteger, isNotValidUuid } = require('../utils/validation')
 const router = express.Router()
+const config = require('../config/index')
+const auth = require('../middlewares/auth')({
+    secret: config.get('secret').jwtSecret,
+    userRepository: dataSource.getRepository(dbEntityNameUser),
+    logger
+})
 
 /** 取得購買方案列表 */
 router.get('/', async (req, res, next) => {
@@ -66,6 +74,36 @@ router.delete('/:creditPackageId', async (req, res, next) => {
             return
         }
         responseSend(res, 200)
+    } catch (error) {
+        logger.error(error)
+        next(error)
+    }
+})
+
+/** 使用者購買方案 */
+router.post('/:creditPackageId', auth, async (req, res, next) => {
+    try {
+        const { id } = req.user
+        const { creditPackageId } = req.params
+        const creditPackageRepo = dataSource.getRepository(dbEntityNameCreditPackage)
+        const creditPackage = await creditPackageRepo.findOne({
+            where: { id: creditPackageId }
+        })
+        if (!creditPackage) {
+            responseSend(res, 400, 'ID錯誤', logger)
+            return
+        }
+        const creditPurchaseRepo = dataSource.getRepository(dbEntityNameCreditPurchase)
+        const newPurchase = await creditPurchaseRepo.create({
+            user_id: id,
+            credit_package_id: creditPackageId,
+            purchased_credits: creditPackage.credit_amount,
+            price_paid: creditPackage.price,
+            purchaseAt: new Date().toISOString()
+        })
+        await creditPurchaseRepo.save(newPurchase)
+
+        responseSend(res, 201)
     } catch (error) {
         logger.error(error)
         next(error)
